@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+var request = require('request');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -41,22 +42,62 @@ exports.readListOfUrls = function(callback) {
 
 exports.isUrlInList = function(url, callback) {
   return new Promise(exports.readListOfUrls)
-    .then(urls => callback(urls.includes(url)));
+    .then((urls) => callback(urls.includes(url)));
 };
 
 exports.addUrlToList = function(url, callback) {
-  // return new Promise((resolve, reject) => {
-    
-  // });
-  // fs.writeFile(exports.paths.list, url, 'utf-8', (err, res) {
-    
-  // }
+  return new Promise((resolve, reject) => {
+    fs.appendFile(exports.paths.list, url + '\n', (err, res) => {
+      if (err) {
+        reject(err);
+      } else {
+        callback(res);
+        resolve(res);
+      }
+    });
+  });
 };
 
 exports.isUrlArchived = function(url, callback) {
+  return new Promise ((resolve, reject) => {
+    fs.readdir(exports.paths.archivedSites, 'utf-8', (err, files) => {
+      let isInDir = files.some((file) => file === url);
+      if (err) { 
+        reject(err); 
+      } else {
+        resolve(isInDir);
+      }
+      callback(isInDir);
+    });
+  });
 };
 
 exports.downloadUrls = function(urls) {
+  return new Promise((resolve, reject) => {
+   
+    urls.forEach(url => {
+      let urlStream = fs.createWriteStream(url);
+      request.get('https://' + url)
+        .then((body) => fs.writeFile(exports.paths.archivedSites + '/' + url,
+          body, 'utf-8', (err) => reject(err)));
+    });
+
+
+    //using promises make a get request for each url
+    //make an options object that houses the url, headers, and json
+    //make the get request
+    //on err reject err
+    //on res write to the urlStreamCopy
+
+  });
+    
+  
+  //looks at the urls
+  //iterates
+  //checks the internet
+  //makes a request to the internet
+  //receives a html file
+  //writes the html file to the sites folder
+
+  //watch for changes
 };
-
-
